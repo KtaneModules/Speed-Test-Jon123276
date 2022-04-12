@@ -9,9 +9,11 @@ public class SpeedTest : MonoBehaviour
     public KMBombModule Module;
     public KMBombInfo BombInfo;
     public KMAudio Audio;
-    public Material buttonMat; // Used for the button material that should change into a color.
-    public KMSelectable button;
-    public Material back;
+    public Material ButtonMat; // Used for the button material that should change into a color.
+    public MeshRenderer ButtonMesh;
+    public KMSelectable Button;
+    public Material Back;
+    public MeshRenderer BackMesh;
 
     private int _moduleId;
     private static int _moduleIdCounter = 1;
@@ -27,13 +29,13 @@ public class SpeedTest : MonoBehaviour
     /// </summary>
     /// <param name="colors"></param>
     /// <returns></returns>
-    IEnumerator cycleColors(Color[] colors)
+    IEnumerator cycleColors(Color[] colors, Material mat)
     {
         yield return null;
         int i = 0;
         while (i < colors.Length)
         {
-            buttonMat.color = colors[i];
+            mat.color = colors[i];
             i++;
             if (i == colors.Length) i = 0;
             yield return new WaitForSeconds(0.3f);
@@ -63,22 +65,26 @@ public class SpeedTest : MonoBehaviour
     /// </summary>
     /// <param name="colors"></param>
     /// <returns></returns>
-    IEnumerator cycleBackColors(Color[] colors)
+    IEnumerator cycleBackColors(Color[] colors, Material mat)
     {
         yield return null;
         int i = 0;
         while (true)
         {
-            back.color = colors[i];
+            mat.color = colors[i];
             i++;
             if (i >= colors.Length) i = 0;
-            yield return new WaitForSeconds(0.01f);
+            yield return new WaitForSeconds(0.75f);
         }
     }
     private void Start()
     {
         _moduleId = _moduleIdCounter++;
-        back.color = Color.white;
+        Back.color = Color.white;
+        Material tempMat = new Material(ButtonMat);
+        ButtonMesh.material = tempMat;
+        Material tempBack = new Material(Back);
+        BackMesh.material = tempBack;
         Color[] randomColors = new Color[10];
         for (int i = 0; i < 10; i++)
         {
@@ -87,23 +93,23 @@ public class SpeedTest : MonoBehaviour
             randomColors[i] = randColor;
             Debug.LogFormat("[Speed Test #{0}] Color {1}: {2}", _moduleId, i+1, randColor);
         }
-        StartCoroutine(cycleColors(randomColors));
+        StartCoroutine(cycleColors(randomColors, tempMat));
         presses = calculatePresses(randomColors);
-        button.OnInteract += delegate
+        Button.OnInteract += delegate
         {
             if (initialTime == 0)
             {
                 StopAllCoroutines();
-                buttonMat.color = Color.white;
+                tempMat.color = Color.white;
                 StartCoroutine(secondsCounting());
             }
             pressesOnButton++;
             if (pressesOnButton >= presses)
             {
                 Module.HandlePass();
-                button.gameObject.SetActive(false);
+                Button.gameObject.SetActive(false);
                 StopAllCoroutines();
-                StartCoroutine(cycleBackColors(randomColors));
+                StartCoroutine(cycleBackColors(randomColors, tempBack));
             }
             Debug.Log("Current press: " + pressesOnButton);
             return false;
